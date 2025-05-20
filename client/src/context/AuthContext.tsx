@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { 
   auth, 
-  loginUser, 
-  registerUser, 
-  logoutUser, 
+  loginWithEmail, 
+  registerWithEmail, 
+  logout, 
   type FirebaseUser 
 } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -48,20 +48,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      await loginUser(email, password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to BearBooLetters! 💕",
-      });
-      return true;
-    } catch (error: any) {
-      let message = "Failed to login. Please check your credentials.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = "Incorrect email or password. Please try again.";
+      const result = await loginWithEmail(email, password);
+      
+      if (result.success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to BearBooLetters! 💕",
+        });
+        return true;
+      } else {
+        let message = "Failed to login. Please check your credentials.";
+        if (result.error?.includes('user-not-found') || result.error?.includes('wrong-password')) {
+          message = "Incorrect email or password. Please try again.";
+        }
+        toast({
+          title: "Login failed",
+          description: message,
+          variant: "destructive",
+        });
+        return false;
       }
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -73,25 +83,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (email: string, password: string, displayName: string) => {
     try {
       setLoading(true);
-      const userCredential = await registerUser(email, password);
+      const result = await registerWithEmail(email, password, displayName);
       
-      // You can update the user profile here if needed
-      
-      toast({
-        title: "Registration successful",
-        description: "Welcome to BearBooLetters! 💖",
-      });
-      return true;
-    } catch (error: any) {
-      let message = "Failed to register. Please try again.";
-      if (error.code === 'auth/email-already-in-use') {
-        message = "This email is already registered. Try logging in instead.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password is too weak. Please use a stronger password.";
+      if (result.success) {
+        toast({
+          title: "Registration successful",
+          description: "Welcome to BearBooLetters! 💖",
+        });
+        return true;
+      } else {
+        let message = "Failed to register. Please try again.";
+        if (result.error?.includes('email-already-in-use')) {
+          message = "This email is already registered. Try logging in instead.";
+        } else if (result.error?.includes('weak-password')) {
+          message = "Password is too weak. Please use a stronger password.";
+        }
+        toast({
+          title: "Registration failed",
+          description: message,
+          variant: "destructive",
+        });
+        return false;
       }
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -100,14 +117,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = async () => {
+  const handleLogout = async () => {
     try {
-      await logoutUser();
-      toast({
-        title: "Logged out",
-        description: "Come back soon! 👋",
-      });
-      return true;
+      const result = await logout();
+      
+      if (result.success) {
+        toast({
+          title: "Logged out",
+          description: "Come back soon! 👋",
+        });
+        return true;
+      } else {
+        toast({
+          title: "Logout failed",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
     } catch (error) {
       toast({
         title: "Logout failed",
@@ -123,7 +150,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     loading,
     login,
     register,
-    logout,
+    logout: handleLogout,
   };
 
   return (
