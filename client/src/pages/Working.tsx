@@ -9,6 +9,7 @@ import DailyAffirmation from "@/components/DailyAffirmation";
 import AnniversaryTracker from "@/components/AnniversaryTracker";
 import DateNightPlanner from "@/components/DateNightPlanner";
 import CustomAvatar, { type AvatarConfig } from "@/components/CustomAvatar";
+import AvatarCustomizer from "@/components/AvatarCustomizer";
 
 // Define message type
 interface Message {
