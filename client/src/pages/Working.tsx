@@ -126,10 +126,31 @@ const Working = () => {
     }
   }, [messages]);
   
-  // Load messages from localStorage
+  // Load messages and room data from localStorage
   useEffect(() => {
     if (!isLoggedIn || !roomCode) return;
     
+    // Create room registry if it doesn't exist
+    const roomsRegistry = localStorage.getItem('bearBoo_rooms_registry');
+    let roomsList = roomsRegistry ? JSON.parse(roomsRegistry) : [];
+    
+    // Check if room exists in registry
+    if (!roomsList.includes(roomCode)) {
+      roomsList.push(roomCode);
+      localStorage.setItem('bearBoo_rooms_registry', JSON.stringify(roomsList));
+      
+      // Create empty structures for new room
+      localStorage.setItem(`bearBoo_${roomCode}_messages`, JSON.stringify([]));
+      localStorage.setItem(`bearBoo_${roomCode}_scrapbook`, JSON.stringify([]));
+      localStorage.setItem(`bearBoo_${roomCode}_game`, JSON.stringify({ questions: [] }));
+      
+      toast({
+        title: "New Room Created",
+        description: "Welcome to your new private chat room!",
+      });
+    }
+    
+    // Load messages 
     const storedMessages = localStorage.getItem(`bearBoo_${roomCode}_messages`);
     if (storedMessages) {
       try {
@@ -639,14 +660,19 @@ const Working = () => {
           onClose={() => setShowScrapbook(false)}
           onShareMemory={(memory) => {
             // Create a memory message
-            const memoryMessage = {
+            const memoryMessage: Message = {
               id: Date.now().toString(),
               sender: username,
               timestamp: Date.now(),
               type: "memory",
               text: memory.caption || "A special memory",
               memoryTitle: memory.title,
-              imageUrl: memory.imageUrl,
+              imageUrl: memory.imageUrl
+            };
+            
+            // Add encrypted version for storage
+            const messageForStorage = {
+              ...memoryMessage,
               encryptedText: encrypt(memory.caption || "A special memory")
             };
             
@@ -655,9 +681,9 @@ const Working = () => {
             let updatedMessages = [];
             
             if (storedMessages) {
-              updatedMessages = [...JSON.parse(storedMessages), memoryMessage];
+              updatedMessages = [...JSON.parse(storedMessages), messageForStorage];
             } else {
-              updatedMessages = [memoryMessage];
+              updatedMessages = [messageForStorage];
             }
             
             // Save to localStorage
