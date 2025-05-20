@@ -277,8 +277,8 @@ const Working = () => {
           ...newMessage,
           type: "image",
           imageUrl: imagePreview,
-          text: messageText || "Sent an image",
-          encryptedText: encrypt(messageText || "Sent an image")
+          text: messageText || "",
+          encryptedText: encrypt(messageText || "")
         };
         
         // Clear image preview after sending
@@ -492,7 +492,7 @@ const Working = () => {
         </div>
 
         {/* Chat Messages Container */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-pink-50 to-white">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-pink-50 to-white scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-transparent">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
               <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center mb-4">
@@ -528,7 +528,7 @@ const Working = () => {
                       <img 
                         src={msg.imageUrl} 
                         alt="Shared image" 
-                        className="rounded-xl max-w-full max-h-64 w-auto object-contain"
+                        className="rounded-xl max-w-full max-h-64 w-auto object-contain cursor-pointer"
                         onClick={() => {
                           // Save to scrapbook
                           const scrapbookKey = `bearBoo_${roomCode}_scrapbook`;
@@ -540,7 +540,7 @@ const Working = () => {
                             scrapbook.push({
                               id: Date.now().toString(),
                               imageUrl: msg.imageUrl,
-                              caption: msg.text !== "Sent an image" ? msg.text : "",
+                              caption: msg.text || "",
                               sender: msg.sender,
                               timestamp: msg.timestamp
                             });
@@ -566,12 +566,12 @@ const Working = () => {
                         alt="Memory" 
                         className="rounded-lg w-full h-auto mb-1"
                       />
-                      <p className="text-sm">{msg.text}</p>
+                      {msg.text && <p className="text-sm">{msg.text}</p>}
                     </div>
                   )}
                   
-                  {/* Message text (show only if not memory type) */}
-                  {(!msg.type || msg.type === "text" || msg.type === "image") && <p>{msg.text}</p>}
+                  {/* Message text (show only if not memory type and has text) */}
+                  {(!msg.type || msg.type === "text" || (msg.type === "image" && msg.text)) && <p>{msg.text}</p>}
                   
                   <div
                     className={`text-xs opacity-70 mt-1 ${
