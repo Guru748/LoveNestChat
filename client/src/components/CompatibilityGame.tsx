@@ -425,7 +425,11 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
   const finishGame = (answers: string[]) => {
     const gameKey = `bearBoo_${roomCode}_game`;
     const storedGame = localStorage.getItem(gameKey);
-    let gameData: any = storedGame ? JSON.parse(storedGame) : { questions };
+    let gameData: any = storedGame ? JSON.parse(storedGame) : { 
+      dateKey: todayKey,
+      title: getGameTitle(),
+      questions 
+    };
     
     // Save my answers
     const playerData = {
@@ -454,7 +458,8 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
           ? gameData.player2.answers 
           : gameData.player1.answers
       );
-      calculateCompatibility(
+      
+      const compatibilityScore = calculateCompatibility(
         gameData.player1.username === username 
           ? gameData.player1.answers 
           : gameData.player2.answers,
@@ -462,6 +467,32 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
           ? gameData.player2.answers 
           : gameData.player1.answers
       );
+      
+      // If game is complete (both players answered), save to history
+      const historyKey = `bearBoo_${roomCode}_game_history`;
+      const storedHistory = localStorage.getItem(historyKey);
+      
+      // Create history entry
+      const historyEntry = {
+        dateKey: gameData.dateKey || todayKey,
+        date: format(new Date(gameData.dateKey || todayKey), 'MMM dd, yyyy'),
+        title: gameData.title || "Daily Compatibility Quiz",
+        player1: gameData.player1,
+        player2: gameData.player2,
+        questions: questions,
+        compatibility: compatibilityScore
+      };
+      
+      // Save to history if we don't already have an entry for today
+      const parsedHistory = storedHistory ? JSON.parse(storedHistory) : [];
+      const todayEntryExists = parsedHistory.some((entry: any) => entry.dateKey === todayKey);
+      
+      if (!todayEntryExists) {
+        const updatedHistory = [historyEntry, ...parsedHistory];
+        localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+        setGameHistory(updatedHistory);
+      }
+      
       setGameState('results');
     } else {
       setGameState('waiting');
@@ -472,15 +503,16 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
   const startNewGame = () => {
     // Clear old game data
     const gameKey = `bearBoo_${roomCode}_game`;
-    localStorage.removeItem(gameKey);
     
-    // Shuffle and pick 5 random questions
-    const shuffled = [...COMPATIBILITY_QUESTIONS].sort(() => 0.5 - Math.random());
-    const newQuestions = shuffled.slice(0, 5);
-    setQuestions(newQuestions);
+    // Generate new game with today's questions
+    const newGameData = {
+      dateKey: todayKey,
+      title: getGameTitle(),
+      questions: getTodaysQuestions(getDateSeed())
+    };
     
-    // Save new questions to localStorage
-    localStorage.setItem(gameKey, JSON.stringify({ questions: newQuestions }));
+    // Save new game data
+    localStorage.setItem(gameKey, JSON.stringify(newGameData));
     
     // Reset state
     setMyAnswers([]);
@@ -488,24 +520,164 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
     setCurrentQuestionIndex(0);
     setCurrentAnswer("");
     setGameState('answering');
+    setQuestions(newGameData.questions);
+    setShowHistory(false);
   };
   
-  // Render different views based on game state
+  // Toggle history view
+  const toggleHistory = () => {
+    setShowHistory(!showHistory);
+  };
+  
+  // Render different views based on game state and whether history is being shown
   const renderContent = () => {
+    // If showing history, render history view instead of game state
+    if (showHistory) {
+      return (
+        <div className="p-4">
+          <h2 className="text-2xl font-bold text-center text-pink-500 mb-4">
+            Compatibility History
+          </h2>
+          <p className="text-center text-sm mb-6">
+            Track how well you and your partner match across different days
+          </p>
+          
+          {gameHistory.length > 0 ? (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {gameHistory.map((entry, index) => (
+                <Card key={index} className="border-pink-100 p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-bold text-pink-500">{entry.title}</h3>
+                    <div className="text-sm text-gray-500">{entry.date}</div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm">Compatibility:</div>
+                      <div 
+                        className={`font-bold ${
+                          entry.compatibility >= 80 ? 'text-green-500' : 
+                          entry.compatibility >= 60 ? 'text-green-400' : 
+                          entry.compatibility >= 40 ? 'text-yellow-500' : 
+                          'text-pink-500'
+                        }`}
+                      >
+                        {entry.compatibility}%
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-pink-100 rounded-full h-2 mt-1">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          entry.compatibility >= 80 ? 'bg-green-500' : 
+                          entry.compatibility >= 60 ? 'bg-green-400' : 
+                          entry.compatibility >= 40 ? 'bg-yellow-500' : 
+                          'bg-pink-500'
+                        }`}
+                        style={{ width: `${entry.compatibility}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm mb-2 font-medium text-pink-500">
+                    Top Questions:
+                  </div>
+                  
+                  {entry.questions.slice(0, 3).map((q: any, qIndex: number) => (
+                    <div key={qIndex} className="border-t border-pink-100 pt-2 pb-2">
+                      <div className="font-medium text-sm mb-1">{q.question}</div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <div className="text-xs text-pink-400">You:</div>
+                          <div className="bg-pink-50 p-1 rounded text-xs">
+                            {entry.player1.username === username 
+                              ? entry.player1.answers[qIndex]
+                              : entry.player2.answers[qIndex]
+                            }
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-pink-400">Partner:</div>
+                          <div className="bg-pink-50 p-1 rounded text-xs">
+                            {entry.player1.username === username 
+                              ? entry.player2.answers[qIndex]
+                              : entry.player1.answers[qIndex]
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {entry.questions.length > 3 && (
+                    <div className="text-xs text-center text-pink-400 mt-2">
+                      + {entry.questions.length - 3} more questions
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-8">
+              <div className="text-4xl mb-4">💖</div>
+              <p>No game history yet! Complete today's quiz to start building your history.</p>
+            </div>
+          )}
+          
+          <div className="flex gap-3 mt-6">
+            <Button 
+              onClick={toggleHistory}
+              className="flex-1 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-all duration-200"
+            >
+              Back to Today's Game
+            </Button>
+            <Button 
+              onClick={onClose}
+              className="flex-1 py-3 bg-white border border-pink-500 text-pink-500 rounded-xl hover:bg-pink-50 transition-all duration-200"
+            >
+              Return to Chat
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Otherwise, render based on game state
     switch (gameState) {
       case 'welcome':
         return (
           <div className="text-center p-4">
-            <h2 className="text-2xl font-bold text-pink-500 mb-6">💘 Couple's Compatibility Game 💘</h2>
+            <h2 className="text-2xl font-bold text-pink-500 mb-4">
+              {getGameTitle()} 
+              <div className="text-sm font-normal mt-1">{format(new Date(), 'MMMM d, yyyy')}</div>
+            </h2>
             <p className="mb-6">
               Find out how well you know each other! Answer 5 questions about your partner,
               and they'll do the same. The more similar your answers, the higher your compatibility score!
             </p>
+            
+            {gameHistory.length > 0 && (
+              <div className="mb-6 bg-pink-50 p-3 rounded-xl">
+                <div className="text-sm font-medium text-pink-500 mb-2">Previous Compatibility:</div>
+                <div className="flex justify-between items-center">
+                  <span>Last Score: </span>
+                  <span className="font-bold text-pink-600">{gameHistory[0]?.compatibility}%</span>
+                </div>
+                <Button 
+                  onClick={toggleHistory}
+                  variant="ghost" 
+                  className="w-full mt-2 text-pink-500 hover:bg-pink-100"
+                >
+                  View History
+                </Button>
+              </div>
+            )}
+            
             <Button 
               onClick={() => setGameState('answering')}
               className="w-full py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-all duration-200"
             >
-              Start Game
+              Start Today's Quiz
             </Button>
           </div>
         );
@@ -513,9 +685,31 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
       case 'answering':
         return (
           <div className="p-4">
-            <h2 className="text-xl font-bold text-pink-500 mb-4">
+            <div className="mb-2 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-pink-500">
+                Today's Quiz
+              </h2>
+              <div className="text-sm text-pink-400">
+                {format(new Date(), 'MMM d')}
+              </div>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="flex space-x-1 mb-4">
+              {questions.map((_, index) => (
+                <div 
+                  key={index}
+                  className={`h-1.5 flex-1 rounded-full ${
+                    index < currentQuestionIndex ? 'bg-pink-500' :
+                    index === currentQuestionIndex ? 'bg-pink-300' : 'bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <div className="text-sm font-medium text-gray-500 mb-1">
               Question {currentQuestionIndex + 1} of {questions.length}
-            </h2>
+            </div>
             
             <div className="bg-pink-50 rounded-xl p-4 mb-6">
               <p className="font-medium text-gray-800">
@@ -540,6 +734,16 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
             >
               {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Finish Game"}
             </Button>
+            
+            {gameHistory.length > 0 && (
+              <Button 
+                onClick={toggleHistory}
+                variant="link" 
+                className="w-full mt-2 text-pink-500"
+              >
+                View Previous Results
+              </Button>
+            )}
           </div>
         );
         
@@ -553,9 +757,19 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
               Waiting for your partner...
             </h2>
             <p className="mb-6">
-              You've completed all the questions! Now waiting for your partner to finish.
+              You've completed today's questions! Now waiting for your partner to finish.
               Check back later to see your compatibility results!
             </p>
+            
+            {gameHistory.length > 0 && (
+              <Button 
+                onClick={toggleHistory}
+                className="w-full py-3 mb-4 bg-white border border-pink-500 text-pink-500 rounded-xl hover:bg-pink-50 transition-all duration-200"
+              >
+                View Previous Results
+              </Button>
+            )}
+            
             <Button 
               onClick={onClose}
               className="w-full py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-all duration-200"
@@ -568,13 +782,25 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
       case 'results':
         return (
           <div className="p-4">
-            <h2 className="text-2xl font-bold text-center text-pink-500 mb-6">
-              Your Compatibility Score: {compatibility}%
+            <h2 className="text-2xl font-bold text-center text-pink-500 mb-2">
+              Today's Compatibility Score
             </h2>
+            <div className="text-center text-sm text-pink-400 mb-4">
+              {format(new Date(), 'MMMM d, yyyy')}
+            </div>
+            
+            <div className="text-center text-3xl font-bold mb-4">
+              {compatibility}%
+            </div>
             
             <div className="w-full bg-pink-100 rounded-full h-4 mb-6">
               <div 
-                className="bg-pink-500 h-4 rounded-full transition-all duration-1000" 
+                className={`h-4 rounded-full transition-all duration-1000 ${
+                  compatibility >= 80 ? 'bg-green-500' : 
+                  compatibility >= 60 ? 'bg-green-400' : 
+                  compatibility >= 40 ? 'bg-yellow-500' : 
+                  'bg-pink-500'
+                }`}
                 style={{ width: `${compatibility}%` }}
               ></div>
             </div>
@@ -583,17 +809,17 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
               {compatibility >= 80 ? (
                 <div>
                   <div className="text-4xl mb-2">😍</div>
-                  <p className="font-medium text-pink-600">Perfect Match! You two are soulmates!</p>
+                  <p className="font-medium text-green-600">Perfect Match! You two are soulmates!</p>
                 </div>
               ) : compatibility >= 60 ? (
                 <div>
                   <div className="text-4xl mb-2">💖</div>
-                  <p className="font-medium text-pink-600">Great Connection! You understand each other well!</p>
+                  <p className="font-medium text-green-500">Great Connection! You understand each other well!</p>
                 </div>
               ) : compatibility >= 40 ? (
                 <div>
                   <div className="text-4xl mb-2">💕</div>
-                  <p className="font-medium text-pink-600">Good Match! You're getting to know each other!</p>
+                  <p className="font-medium text-yellow-600">Good Match! You're getting to know each other!</p>
                 </div>
               ) : (
                 <div>
@@ -628,11 +854,19 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
               >
                 Play Again
               </Button>
+              {gameHistory.length > 1 && (
+                <Button 
+                  onClick={toggleHistory}
+                  className="flex-1 py-3 bg-white border border-pink-500 text-pink-500 rounded-xl hover:bg-pink-50 transition-all duration-200"
+                >
+                  View History
+                </Button>
+              )}
               <Button 
                 onClick={onClose}
                 className="flex-1 py-3 bg-white border border-pink-500 text-pink-500 rounded-xl hover:bg-pink-50 transition-all duration-200"
               >
-                Return to Chat
+                Close
               </Button>
             </div>
           </div>
@@ -645,7 +879,7 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
       <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-pink-100 bg-white rounded-t-3xl">
           <h1 className="font-bold text-pink-500">
-            💘 Couple's Game
+            {showHistory ? "💘 Compatibility History" : "💘 Daily Couple's Quiz"}
           </h1>
           <Button
             variant="ghost"
