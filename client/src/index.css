@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+
+  /* Custom pink primary color */
+  --primary: 336 100% 71%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Custom pink secondary color */
+  --secondary: 335 100% 81%;
+  --secondary-foreground: 24 9.8% 10%;
+  
+  /* Custom pink accent color */
+  --accent: 338 83% 52%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 346 77% 49.8%;
+  --radius: 0.5rem;
+
+  /* Custom theme colors */
+  --theme-pink-primary: 336 100% 71%;
+  --theme-pink-secondary: 335 100% 81%;
+  --theme-pink-accent: 338 83% 52%;
+  --theme-pink-light: 335 100% 97%;
+  --theme-pink-dark: 330 81% 18%;
+
+  --theme-purple-primary: 276 100% 72%;
+  --theme-purple-secondary: 276 100% 85%;
+  --theme-purple-accent: 280 83% 52%;
+  --theme-purple-light: 280 100% 97%;
+  --theme-purple-dark: 280 81% 18%;
+
+  --theme-blue-primary: 210 100% 66%;
+  --theme-blue-secondary: 210 100% 77%;
+  --theme-blue-accent: 213 83% 52%;
+  --theme-blue-light: 210 100% 97%;
+  --theme-blue-dark: 210 81% 18%;
+
+  --theme-green-primary: 142 76% 54%;
+  --theme-green-secondary: 142 76% 75%;
+  --theme-green-accent: 142 83% 42%;
+  --theme-green-light: 142 76% 97%;
+  --theme-green-dark: 142 81% 18%;
+
+  --theme-yellow-primary: 48 100% 67%;
+  --theme-yellow-secondary: 48 100% 80%;
+  --theme-yellow-accent: 48 83% 52%;
+  --theme-yellow-light: 48 100% 97%;
+  --theme-yellow-dark: 48 81% 18%;
+
+  --theme-red-primary: 0 100% 67%;
+  --theme-red-secondary: 0 100% 80%;
+  --theme-red-accent: 0 83% 52%;
+  --theme-red-light: 0 100% 97%;
+  --theme-red-dark: 0 81% 18%;
+
+  /* Status colors */
+  --online: 142 76% 49%;
+  --offline: 0 0% 62%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 336 100% 71%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 335 100% 81%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 338 83% 52%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 346 77% 49.8%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-image: url('https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    @apply text-foreground;
+  }
+
+  /* Font for headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Comic Sans MS', cursive;
+  }
+}
+
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+
+  .animate-heart-beat {
+    animation: heartBeat 1.5s ease-in-out infinite;
+  }
+
+  .animate-sending-heart {
+    animation: flyingHeart 1s forwards;
+  }
+
+  .typing-indicator::after {
+    content: '...';
+    animation: typing 1.5s infinite;
+  }
+}
+
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}
+
+@keyframes slideIn {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes flyingHeart {
+  0% { transform: scale(0.5) translate(0, 0); opacity: 1; }
+  100% { transform: scale(0.1) translate(-100px, -100px); opacity: 0; }
+}
+
+@keyframes typing {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+/* Theme styles */
+.theme-pink {
+  --primary: var(--theme-pink-primary);
+  --secondary: var(--theme-pink-secondary);
+  --accent: var(--theme-pink-accent);
+}
+
+.theme-purple {
+  --primary: var(--theme-purple-primary);
+  --secondary: var(--theme-purple-secondary);
+  --accent: var(--theme-purple-accent);
+}
+
+.theme-blue {
+  --primary: var(--theme-blue-primary);
+  --secondary: var(--theme-blue-secondary);
+  --accent: var(--theme-blue-accent);
+}
+
+.theme-green {
+  --primary: var(--theme-green-primary);
+  --secondary: var(--theme-green-secondary);
+  --accent: var(--theme-green-accent);
+}
+
+.theme-yellow {
+  --primary: var(--theme-yellow-primary);
+  --secondary: var(--theme-yellow-secondary);
+  --accent: var(--theme-yellow-accent);
+}
+
+.theme-red {
+  --primary: var(--theme-red-primary);
+  --secondary: var(--theme-red-secondary);
+  --accent: var(--theme-red-accent);
+}
