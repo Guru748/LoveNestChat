@@ -631,17 +631,30 @@ const Working = () => {
             />
           )}
           
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-1 sm:gap-2">
+            {/* Emoji bar on small screens */}
+            <div className="flex overflow-x-auto gap-1 py-1 px-1 -mx-1 mb-2 max-w-[180px] sm:hidden">
+              {["❤️", "😘", "🥰", "😊", "💕", "🌹", "✨"].map((emoji) => (
+                <button 
+                  key={emoji}
+                  className="flex-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-pink-100 transition-colors"
+                  onClick={() => addEmoji(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            
             {/* Emoji button */}
             <div className="flex-none">
               <Button 
                 type="button" 
                 size="icon" 
                 variant="ghost"
-                className="text-pink-500 hover:text-pink-600 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 text-pink-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
                 onClick={() => addEmoji("❤️")}
               >
-                ❤️
+                <span className="text-base sm:text-lg">❤️</span>
               </Button>
             </div>
             
@@ -651,11 +664,11 @@ const Working = () => {
                 type="button" 
                 size="icon" 
                 variant="ghost"
-                className="text-pink-500 hover:text-pink-600 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 text-pink-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
                 onClick={() => setShowMoodSuggestions(!showMoodSuggestions)}
                 title="Message Suggestions"
               >
-                💭
+                <span className="text-base sm:text-lg">💭</span>
               </Button>
             </div>
             
@@ -665,11 +678,11 @@ const Working = () => {
                 type="button" 
                 size="icon" 
                 variant="ghost"
-                className="text-pink-500 hover:text-pink-600 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 text-pink-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
                 onClick={() => fileInputRef.current?.click()}
                 title="Share Photo"
               >
-                📷
+                <span className="text-base sm:text-lg">📷</span>
               </Button>
               <input
                 type="file"
@@ -692,26 +705,27 @@ const Working = () => {
                     }
                   }}
                   placeholder="Write something cute... ✍️💌"
-                  className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                  className="w-full py-2 sm:py-3 px-3 sm:px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-sm sm:text-base"
                 />
               </div>
             )}
 
             <Button
               onClick={handleSendMessage}
-              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200 animate-pulse-slow"
+              className="bg-pink-500 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full hover:bg-pink-600 transition-all duration-200 shadow-md flex items-center justify-center"
+              title="Send Message"
             >
-              📨
+              <span className="text-lg sm:text-xl">📨</span>
             </Button>
           </div>
           
-          {/* Quick emoji buttons */}
-          <div className="flex justify-center gap-2 mt-2 flex-wrap">
-            {["💖", "😍", "🥰", "😘", "🐻", "💕", "💋", "🌹", "🦋", "✨"].map(emoji => (
+          {/* Quick emoji buttons - hidden on mobile, shown on larger screens */}
+          <div className="hidden sm:flex justify-center gap-2 mt-2 flex-wrap">
+            {["💖", "😍", "🥰", "😘", "🐻", "💕", "💋", "🌹", "🦋", "✨", "💌", "💝", "🔥", "💯"].map(emoji => (
               <button 
                 key={emoji}
                 onClick={() => addEmoji(emoji)}
-                className="w-8 h-8 rounded-full hover:bg-pink-100 flex items-center justify-center"
+                className="w-9 h-9 rounded-full hover:bg-pink-100 active:bg-pink-200 flex items-center justify-center transition-transform hover:scale-110"
               >
                 {emoji}
               </button>
