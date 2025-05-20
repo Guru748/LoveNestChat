@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import CompatibilityGame from "@/components/CompatibilityGame";
 
 // Define message type
 interface Message {
@@ -20,6 +21,7 @@ const Working = () => {
   const [roomCode, setRoomCode] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showCompatibilityGame, setShowCompatibilityGame] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -302,12 +304,22 @@ const Working = () => {
             </div>
           </div>
           
-          <div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:text-pink-200 transition-colors"
+              onClick={() => setShowCompatibilityGame(true)}
+              title="Play Couple's Game"
+            >
+              💘
+            </Button>
             <Button 
               variant="ghost" 
               size="icon" 
               className="text-white hover:text-pink-200 transition-colors"
               onClick={handleLogout}
+              title="Log Out"
             >
               🚪
             </Button>
@@ -417,6 +429,15 @@ const Working = () => {
           </div>
         </div>
       </div>
+      
+      {/* Render the compatibility game when showCompatibilityGame is true */}
+      {showCompatibilityGame && (
+        <CompatibilityGame
+          username={username}
+          roomCode={roomCode}
+          onClose={() => setShowCompatibilityGame(false)}
+        />
+      )}
     </div>
   );
 };
