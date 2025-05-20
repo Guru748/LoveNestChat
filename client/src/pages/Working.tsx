@@ -253,7 +253,12 @@ const Working = () => {
   };
   
   // Send message (text or image)
-  const handleSendMessage = (customText?: string) => {
+  const handleSendMessage = function(customText?: string | React.MouseEvent) {
+    // Check if it's a button click event
+    if (customText && typeof customText === 'object' && 'preventDefault' in customText) {
+      customText.preventDefault();
+      customText = undefined;
+    }
     if ((!message.trim() && !imagePreview && !customText) || !isLoggedIn) return;
     
     try {
@@ -614,9 +619,11 @@ const Working = () => {
             </div>
           )}
           
-          {/* Mood-based suggestions popup */}
+          {/* Smart message suggestions popup */}
           {showMoodSuggestions && (
-            <MoodSuggestions 
+            <SmartMessageSuggestions 
+              messages={messages}
+              username={username}
               onSelectSuggestion={(suggestion) => setMessage(suggestion)} 
               onClose={() => setShowMoodSuggestions(false)}
             />
@@ -690,7 +697,7 @@ const Working = () => {
 
             <Button
               onClick={handleSendMessage}
-              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200"
+              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200 animate-pulse-slow"
             >
               📨
             </Button>
