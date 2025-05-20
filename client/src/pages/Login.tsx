@@ -36,6 +36,17 @@ const Login = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      // If encryption password exists
+      const storedPassword = sessionStorage.getItem("bearBooPassword");
+      if (storedPassword) {
+        setLocation("/chat");
+      }
+    }
+  }, [currentUser, setLocation]);
+
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

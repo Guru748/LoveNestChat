@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTheme } from "@/hooks/useTheme";
-import { useChatRoom } from "@/hooks/useChatRoom";
+import { useChatWithFirebase } from "@/hooks/useChatWithFirebase";
 import { useAuth } from "@/context/AuthContext";
 import ThemeSelector from "./ThemeSelector";
 import EmojiPicker from "./EmojiPicker";
@@ -27,7 +27,7 @@ const ChatInterface = () => {
     setMessageInput, 
     sendMessage,
     messagesEndRef 
-  } = useChatRoom();
+  } = useChatWithFirebase();
   const { currentTheme, changeTheme, themes } = useTheme();
   
   const [showThemeSelector, setShowThemeSelector] = useState(false);
