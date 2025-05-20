@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns';
 
+// Expanded list of compatibility questions with categories
 const COMPATIBILITY_QUESTIONS = [
   {
     question: "What's your partner's favorite food?",
@@ -43,8 +45,167 @@ const COMPATIBILITY_QUESTIONS = [
   {
     question: "What would your partner's perfect day look like?",
     category: "Lifestyle"
+  },
+  {
+    question: "What's a gift your partner would love but would never ask for?",
+    category: "Preferences"
+  },
+  {
+    question: "What song or artist would your partner say is 'our song'?",
+    category: "Entertainment"
+  },
+  {
+    question: "What's something your partner is secretly proud of?",
+    category: "Personal"
+  },
+  {
+    question: "What childhood memory does your partner talk about most?",
+    category: "Personal"
+  },
+  {
+    question: "What would your partner want to do on a surprise date night?",
+    category: "Relationship"
+  },
+  {
+    question: "What would your partner say is your love language?",
+    category: "Relationship"
+  },
+  {
+    question: "What's your partner's favorite way to show affection?",
+    category: "Relationship"
+  },
+  {
+    question: "What hobby would your partner take up if time and money weren't issues?",
+    category: "Dreams"
+  },
+  {
+    question: "What's a small gesture that always makes your partner happy?",
+    category: "Relationship"
+  },
+  {
+    question: "What's your partner's guilty pleasure?",
+    category: "Preferences"
+  },
+  {
+    question: "What's your partner's favorite season and why?",
+    category: "Preferences"
+  },
+  {
+    question: "What fictional character does your partner relate to most?",
+    category: "Entertainment"
+  },
+  {
+    question: "What's one thing your partner would change about their past?",
+    category: "Personal"
+  },
+  {
+    question: "What makes your partner feel most loved?",
+    category: "Relationship"
+  },
+  {
+    question: "What's your partner's idea of a perfect weekend?",
+    category: "Lifestyle"
+  },
+  {
+    question: "What style of clothing does your partner feel most confident in?",
+    category: "Preferences"
+  },
+  {
+    question: "If your partner could have dinner with anyone (dead or alive), who would it be?",
+    category: "Personal"
+  },
+  {
+    question: "What's your partner's favorite memory of your relationship?",
+    category: "Relationship"
+  },
+  {
+    question: "What does your partner value most in a friendship?",
+    category: "Personal"
+  },
+  {
+    question: "What's something that always cheers your partner up when they're sad?",
+    category: "Personal"
+  },
+  {
+    question: "What's the first thing your partner notices about other people?",
+    category: "Personal"
+  },
+  {
+    question: "What topic could your partner talk about for hours?",
+    category: "Preferences"
+  },
+  {
+    question: "What would your partner consider their greatest achievement?",
+    category: "Personal"
+  },
+  {
+    question: "What's one thing your partner wants to improve about themselves?",
+    category: "Personal"
+  },
+  {
+    question: "What does your partner find most attractive about you?",
+    category: "Relationship"
   }
 ];
+
+// Generate a deterministic seed based on date to ensure same questions on same day
+// but different questions on different days
+function getDateSeed(): number {
+  const today = new Date();
+  const dateString = format(today, 'yyyyMMdd');
+  
+  // Create a simple hash from the date string
+  let hash = 0;
+  for (let i = 0; i < dateString.length; i++) {
+    hash = ((hash << 5) - hash) + dateString.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Seeded random function - returns same sequence for same seed
+function seededRandom(seed: number, index: number = 0): number {
+  const x = Math.sin(seed + index) * 10000;
+  return x - Math.floor(x);
+}
+
+// Get today's questions (5 questions that change daily)
+function getTodaysQuestions(seed: number) {
+  // Create a copy of the questions
+  const allQuestions = [...COMPATIBILITY_QUESTIONS];
+  const todaysQuestions = [];
+  
+  // Pick 5 questions based on today's seed
+  for (let i = 0; i < 5; i++) {
+    const randomIndex = Math.floor(seededRandom(seed, i) * allQuestions.length);
+    todaysQuestions.push(allQuestions[randomIndex]);
+    allQuestions.splice(randomIndex, 1); // Remove the selected question
+  }
+  
+  return todaysQuestions;
+}
+
+// Get today's date key for storage
+function getTodayKey(): string {
+  return format(new Date(), 'yyyy-MM-dd');
+}
+
+// Get game title based on today's date
+function getGameTitle(): string {
+  const seed = getDateSeed();
+  const titles = [
+    "Daily Couple Connection", 
+    "Today's Relationship Quiz",
+    "Love Connection Challenge",
+    "Daily Compatibility Test",
+    "Heart Link Challenge",
+    "Today's Love Language Quiz",
+    "Couple's Mind Meld",
+    "Daily Heart Check"
+  ];
+  
+  return titles[Math.floor(seededRandom(seed, 42) * titles.length)];
+}
 
 interface CompatibilityGameProps {
   username: string;
@@ -67,67 +228,150 @@ export const CompatibilityGame: React.FC<CompatibilityGameProps> = ({
   
   const { toast } = useToast();
 
-  // Initialize game with random questions
+  // Initialize game with today's questions based on date
   useEffect(() => {
-    // Shuffle and pick 5 random questions
-    const shuffled = [...COMPATIBILITY_QUESTIONS].sort(() => 0.5 - Math.random());
-    setQuestions(shuffled.slice(0, 5));
+    // Get today's seed based on the date
+    const seed = getDateSeed();
+    
+    // Get questions that are the same for today but will change tomorrow
+    const todaysQuestions = getTodaysQuestions(seed);
+    
+    // Set the questions
+    setQuestions(todaysQuestions);
   }, []);
   
+  // State for game history tracking
+  const [gameHistory, setGameHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [todayKey] = useState(getTodayKey());
+
   // Load existing game data from localStorage
   useEffect(() => {
     const gameKey = `bearBoo_${roomCode}_game`;
+    const historyKey = `bearBoo_${roomCode}_game_history`;
     const storedGame = localStorage.getItem(gameKey);
+    const storedHistory = localStorage.getItem(historyKey);
+    
+    // Load game history if available
+    if (storedHistory) {
+      try {
+        const parsedHistory = JSON.parse(storedHistory);
+        setGameHistory(parsedHistory);
+      } catch (error) {
+        console.error("Error loading game history:", error);
+      }
+    }
     
     if (storedGame) {
       try {
         const gameData = JSON.parse(storedGame);
         
-        // If there's partner data and we don't have results yet
-        if (gameData.player1 && gameData.player2 && gameState !== 'results') {
-          // Both players have answered
-          const player1Data = gameData.player1;
-          const player2Data = gameData.player2;
-          
-          // Determine if we're player 1 or 2
-          if (player1Data.username === username) {
-            setMyAnswers(player1Data.answers);
-            setPartnerAnswers(player2Data.answers);
-            setGameState('results');
-            calculateCompatibility(player1Data.answers, player2Data.answers);
-          } else if (player2Data.username === username) {
-            setMyAnswers(player2Data.answers);
-            setPartnerAnswers(player1Data.answers);
-            setGameState('results');
-            calculateCompatibility(player2Data.answers, player1Data.answers);
+        // Check if the stored game is from a previous day
+        if (gameData.dateKey && gameData.dateKey !== todayKey) {
+          // It's a new day - archive yesterday's game if complete
+          if (gameData.player1 && gameData.player2) {
+            // Save completed game to history
+            const historyEntry = {
+              dateKey: gameData.dateKey,
+              date: format(new Date(gameData.dateKey), 'MMM dd, yyyy'),
+              title: gameData.title || "Daily Compatibility Quiz",
+              player1: gameData.player1,
+              player2: gameData.player2,
+              questions: gameData.questions,
+              compatibility: calculateCompatibility(
+                gameData.player1.username === username 
+                  ? gameData.player1.answers 
+                  : gameData.player2.answers,
+                gameData.player1.username === username 
+                  ? gameData.player2.answers 
+                  : gameData.player1.answers
+              )
+            };
+            
+            // Update history
+            const updatedHistory = storedHistory 
+              ? [historyEntry, ...JSON.parse(storedHistory)]
+              : [historyEntry];
+              
+            // Save updated history
+            localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+            setGameHistory(updatedHistory);
           }
+          
+          // Create a new game for today
+          const newGameData = {
+            dateKey: todayKey,
+            title: getGameTitle(),
+            questions: getTodaysQuestions(getDateSeed())
+          };
+          
+          // Save new game
+          localStorage.setItem(gameKey, JSON.stringify(newGameData));
+          
+          // Update state with new questions
+          setQuestions(newGameData.questions);
         } 
-        // If only one player answered and it wasn't us
-        else if (
-          (gameData.player1 && gameData.player1.username !== username && !gameData.player2) ||
-          (gameData.player2 && gameData.player2.username !== username && !gameData.player1)
-        ) {
-          setGameState('answering');
-          setQuestions(gameData.questions);
-        }
-        // If we've already answered but partner hasn't
-        else if (
-          (gameData.player1 && gameData.player1.username === username && !gameData.player2) ||
-          (gameData.player2 && gameData.player2.username === username && !gameData.player1)
-        ) {
-          setGameState('waiting');
-          // Set my answers
-          if (gameData.player1 && gameData.player1.username === username) {
-            setMyAnswers(gameData.player1.answers);
-          } else if (gameData.player2 && gameData.player2.username === username) {
-            setMyAnswers(gameData.player2.answers);
+        // If it's today's game, load it normally
+        else {
+          // If there's partner data and we don't have results yet
+          if (gameData.player1 && gameData.player2 && gameState !== 'results') {
+            // Both players have answered
+            const player1Data = gameData.player1;
+            const player2Data = gameData.player2;
+            
+            // Determine if we're player 1 or 2
+            if (player1Data.username === username) {
+              setMyAnswers(player1Data.answers);
+              setPartnerAnswers(player2Data.answers);
+              setGameState('results');
+              calculateCompatibility(player1Data.answers, player2Data.answers);
+            } else if (player2Data.username === username) {
+              setMyAnswers(player2Data.answers);
+              setPartnerAnswers(player1Data.answers);
+              setGameState('results');
+              calculateCompatibility(player2Data.answers, player1Data.answers);
+            }
+          } 
+          // If only one player answered and it wasn't us
+          else if (
+            (gameData.player1 && gameData.player1.username !== username && !gameData.player2) ||
+            (gameData.player2 && gameData.player2.username !== username && !gameData.player1)
+          ) {
+            setGameState('answering');
+            setQuestions(gameData.questions);
+          }
+          // If we've already answered but partner hasn't
+          else if (
+            (gameData.player1 && gameData.player1.username === username && !gameData.player2) ||
+            (gameData.player2 && gameData.player2.username === username && !gameData.player1)
+          ) {
+            setGameState('waiting');
+            // Set my answers
+            if (gameData.player1 && gameData.player1.username === username) {
+              setMyAnswers(gameData.player1.answers);
+            } else if (gameData.player2 && gameData.player2.username === username) {
+              setMyAnswers(gameData.player2.answers);
+            }
           }
         }
       } catch (error) {
         console.error("Error loading game data:", error);
       }
+    } else {
+      // No existing game, create a new one for today
+      const newGameData = {
+        dateKey: todayKey,
+        title: getGameTitle(),
+        questions: getTodaysQuestions(getDateSeed())
+      };
+      
+      // Save new game
+      localStorage.setItem(gameKey, JSON.stringify(newGameData));
+      
+      // Update state with new questions
+      setQuestions(newGameData.questions);
     }
-  }, [roomCode, username]);
+  }, [roomCode, username, todayKey]);
   
   // Calculate compatibility percentage
   const calculateCompatibility = (answers1: string[], answers2: string[]) => {
