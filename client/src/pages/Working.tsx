@@ -630,6 +630,47 @@ const Working = () => {
           onClose={() => setShowCompatibilityGame(false)}
         />
       )}
+      
+      {/* Render the scrapbook when showScrapbook is true */}
+      {showScrapbook && (
+        <Scrapbook
+          username={username}
+          roomCode={roomCode}
+          onClose={() => setShowScrapbook(false)}
+          onShareMemory={(memory) => {
+            // Create a memory message
+            const memoryMessage = {
+              id: Date.now().toString(),
+              sender: username,
+              timestamp: Date.now(),
+              type: "memory",
+              text: memory.caption || "A special memory",
+              memoryTitle: memory.title,
+              imageUrl: memory.imageUrl,
+              encryptedText: encrypt(memory.caption || "A special memory")
+            };
+            
+            // Get existing messages
+            const storedMessages = localStorage.getItem(`bearBoo_${roomCode}_messages`);
+            let updatedMessages = [];
+            
+            if (storedMessages) {
+              updatedMessages = [...JSON.parse(storedMessages), memoryMessage];
+            } else {
+              updatedMessages = [memoryMessage];
+            }
+            
+            // Save to localStorage
+            localStorage.setItem(`bearBoo_${roomCode}_messages`, JSON.stringify(updatedMessages));
+            
+            // Update state
+            setMessages([...messages, memoryMessage]);
+            
+            // Close scrapbook
+            setShowScrapbook(false);
+          }}
+        />
+      )}
     </div>
   );
 };
