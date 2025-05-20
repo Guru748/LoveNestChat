@@ -255,8 +255,8 @@ const Working = () => {
   // Send message (text or image)
   const handleSendMessage = function(customText?: string | React.MouseEvent) {
     // Check if it's a button click event
-    if (customText && typeof customText === 'object' && 'preventDefault' in customText) {
-      customText.preventDefault();
+    // Handle React event objects
+  if (customText && typeof customText === 'object' && 'type' in customText) {
       customText = undefined;
     }
     if ((!message.trim() && !imagePreview && !customText) || !isLoggedIn) return;

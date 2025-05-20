@@ -138,7 +138,7 @@ const DailyAffirmation: React.FC<DailyAffirmationProps> = ({
           <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
             {affirmationHistory.length > 1 ? (
               [...affirmationHistory]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .slice(1) // Skip today's affirmation which is already displayed above
                 .map((item, index) => (
                   <div key={index} className="p-3 border border-pink-100 rounded-lg">
