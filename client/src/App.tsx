@@ -4,12 +4,12 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import SimpleRoom from "@/pages/SimpleRoom";
+import Working from "@/pages/Working";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={SimpleRoom} />
+      <Route path="/" component={Working} />
       <Route component={NotFound} />
     </Switch>
   );
