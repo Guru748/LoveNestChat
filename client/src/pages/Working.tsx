@@ -213,11 +213,32 @@ const Working = () => {
       return;
     }
     
+    // Verify it's an image
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         setImagePreview(event.target.result as string);
+        toast({
+          title: "Image ready",
+          description: "Add a caption if you'd like, then send!",
+        });
       }
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Error reading file",
+        description: "Please try another image.",
+        variant: "destructive"
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -738,7 +759,7 @@ const Working = () => {
         <DailyAffirmation
           roomCode={roomCode}
           onClose={() => setShowDailyAffirmation(false)}
-          onSendAffirmation={(text) => {
+          onSendAffirmation={(text: string) => {
             // Create and send a message with the affirmation
             handleSendMessage(text);
             setShowDailyAffirmation(false);
@@ -751,7 +772,7 @@ const Working = () => {
         <AnniversaryTracker
           roomCode={roomCode}
           onClose={() => setShowAnniversaryTracker(false)}
-          onShareAnniversary={(text) => {
+          onShareAnniversary={(text: string) => {
             // Create and send a message with the anniversary info
             handleSendMessage(text);
             setShowAnniversaryTracker(false);
