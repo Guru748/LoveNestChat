@@ -2,10 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base theme colors */
+:root {
+  --primary: #ec4899;
+  --primary-light: #f472b6;
+  --primary-dark: #db2777;
+  --secondary: #f9a8d4;
+  --tertiary: #fce7f3;
+  --text-primary: #4b5563;
+  --text-secondary: #9ca3af;
+  --text-on-primary: #ffffff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #fce7f3;
+  --bg-bubble-me: #f472b6;
+  --bg-bubble-other: #f9f9f9;
+  --border-color: #f9a8d4;
+  --shadow-color: rgba(236, 72, 153, 0.2);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -13,18 +31,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #f472b6;
+  background: var(--primary-light);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ec4899;
+  background: var(--primary);
 }
 
 /* Scrollbar for Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #f472b6 transparent;
+  scrollbar-color: var(--primary-light) transparent;
 }
 
 /* Custom Animations */
@@ -46,12 +64,28 @@
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-2deg);
+  }
+  75% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
 .animate-bounce-slow {
   animation: bounce-slow 3s ease-in-out infinite;
 }
 
 .animate-pulse-slow {
   animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 /* Typing Dots Animation */
@@ -77,6 +111,78 @@
     transform: translateY(-4px);
     opacity: 1;
   }
+}
+
+/* Responsive Layout Helpers */
+@layer utilities {
+  .max-w-chat {
+    max-width: 1200px;
+  }
+  
+  .message-bubble-me {
+    background-color: var(--bg-bubble-me);
+    color: var(--text-on-primary);
+    border-radius: 18px 18px 4px 18px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+  }
+  
+  .message-bubble-other {
+    background-color: var(--bg-bubble-other);
+    color: var(--text-primary);
+    border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .feature-card {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px var(--shadow-color);
+  }
+  
+  /* Mobile Responsiveness */
+  .mobile-padding {
+    @apply px-3 py-2 md:px-6 md:py-4;
+  }
+  
+  .mobile-container {
+    @apply w-full max-w-[100vw] md:max-w-[90vw] lg:max-w-[1000px];
+  }
+}
+
+/* Custom Font Smoothing */
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  color: var(--text-primary);
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improved Buttons */
+button {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* Improved inputs */
+input:focus, textarea:focus {
+  outline: 2px solid var(--primary-light) !important;
+  outline-offset: 2px;
 }
 
 /* Base theme colors */

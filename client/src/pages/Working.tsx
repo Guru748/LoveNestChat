@@ -419,74 +419,74 @@ const Working = () => {
   
   // Chat interface
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-pink-100 to-pink-50">
-      <div className="h-[calc(100vh-2rem)] max-h-[700px] w-full max-w-md flex flex-col relative overflow-hidden bg-white rounded-3xl shadow-xl">
+    <div className="min-h-screen w-full flex items-center justify-center p-2 sm:p-4 bg-gradient-to-r from-pink-100 to-pink-50">
+      <div className="h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] max-h-[800px] w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col relative overflow-hidden bg-white rounded-3xl shadow-xl">
         {/* Chat Header */}
-        <div className="bg-pink-500 text-white py-4 px-6 flex justify-between items-center rounded-t-3xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center">
-              <span className="text-xl">🐻</span>
+        <div className="bg-pink-500 text-white py-3 px-4 md:py-4 md:px-6 flex justify-between items-center rounded-t-3xl shadow-md">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/30 flex items-center justify-center animate-float">
+              <span className="text-base md:text-xl">🐻</span>
             </div>
             <div>
-              <div className="font-semibold">BearBooLetters 💕</div>
+              <div className="font-semibold text-sm md:text-base">BearBooLetters 💕</div>
               <div className="text-xs">Room: {roomCode}</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={() => setShowCompatibilityGame(true)}
               title="Play Couple's Game"
             >
-              💘
+              <span className="text-sm sm:text-base">💘</span>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={() => setShowScrapbook(true)}
               title="Memories Scrapbook"
             >
-              📒
+              <span className="text-sm sm:text-base">📒</span>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={() => setShowDailyAffirmation(true)}
               title="Daily Love Affirmation"
             >
-              ✨
+              <span className="text-sm sm:text-base">✨</span>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={() => setShowAnniversaryTracker(true)}
               title="Special Dates Tracker"
             >
-              💕
+              <span className="text-sm sm:text-base">💕</span>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={() => setShowDatePlanner(true)}
               title="Virtual Date Planner"
             >
-              🌙
+              <span className="text-sm sm:text-base">🌙</span>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-white hover:text-pink-200 hover:bg-pink-600 transition-colors rounded-full"
               onClick={handleLogout}
               title="Log Out"
             >
-              🚪
+              <span className="text-sm sm:text-base">🚪</span>
             </Button>
           </div>
         </div>
@@ -510,10 +510,10 @@ const Working = () => {
                 className={`flex ${msg.sender === username ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl p-3 ${
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-xl sm:rounded-2xl p-2 sm:p-3 ${
                     msg.sender === username
-                      ? "bg-pink-500 text-white"
-                      : "bg-white text-gray-800 border border-pink-100"
+                      ? "message-bubble-me"
+                      : "message-bubble-other"
                   }`}
                 >
                   {msg.sender !== username && (
@@ -571,7 +571,9 @@ const Working = () => {
                   )}
                   
                   {/* Message text (show only if not memory type and has text) */}
-                  {(!msg.type || msg.type === "text" || (msg.type === "image" && msg.text)) && <p>{msg.text}</p>}
+                  {(!msg.type || msg.type === "text" || (msg.type === "image" && msg.text)) && 
+                    <p className="text-sm sm:text-base break-words">{msg.text}</p>
+                  }
                   
                   <div
                     className={`text-xs opacity-70 mt-1 ${
