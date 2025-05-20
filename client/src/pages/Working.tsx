@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import CompatibilityGame from "@/components/CompatibilityGame";
+import Scrapbook from "@/components/Scrapbook";
+import MoodSuggestions from "@/components/MoodSuggestions";
 
 // Define message type
 interface Message {
@@ -10,8 +12,9 @@ interface Message {
   text: string;
   sender: string;
   timestamp: number;
-  type?: "text" | "image";
+  type?: "text" | "image" | "memory";
   imageUrl?: string;
+  memoryTitle?: string;
 }
 
 const Working = () => {
@@ -22,8 +25,13 @@ const Working = () => {
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCompatibilityGame, setShowCompatibilityGame] = useState(false);
+  const [showScrapbook, setShowScrapbook] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showMoodSuggestions, setShowMoodSuggestions] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   // Encrypt a message - Unicode safe version
@@ -163,19 +171,73 @@ const Working = () => {
     setMessage(prev => prev + emoji);
   };
   
-  // Send message
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setImagePreview(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Cancel image upload
+  const cancelImageUpload = () => {
+    setImagePreview(null);
+    setMessage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  
+  // Send message (text or image)
   const handleSendMessage = () => {
-    if (!message.trim() || !isLoggedIn) return;
+    if ((!message.trim() && !imagePreview) || !isLoggedIn) return;
     
     try {
       // Create message object
-      const newMessage = {
+      let newMessage: any = {
         id: Date.now().toString(),
-        text: message,
         sender: username,
         timestamp: Date.now(),
-        encryptedText: encrypt(message)
       };
+      
+      // If sending an image
+      if (imagePreview) {
+        newMessage = {
+          ...newMessage,
+          type: "image",
+          imageUrl: imagePreview,
+          text: message || "Sent an image",
+          encryptedText: encrypt(message || "Sent an image")
+        };
+        setImagePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } else {
+        // Text message
+        newMessage = {
+          ...newMessage,
+          type: "text",
+          text: message,
+          encryptedText: encrypt(message)
+        };
+      }
       
       // Get existing messages
       const storedMessages = localStorage.getItem(`bearBoo_${roomCode}_messages`);
@@ -191,7 +253,7 @@ const Working = () => {
       localStorage.setItem(`bearBoo_${roomCode}_messages`, JSON.stringify(updatedMessages));
       
       // Update state
-      setMessages([...messages, {...newMessage, text: message}]);
+      setMessages([...messages, {...newMessage, text: newMessage.text}]);
       
       // Clear input
       setMessage("");
@@ -318,6 +380,15 @@ const Working = () => {
               variant="ghost" 
               size="icon" 
               className="text-white hover:text-pink-200 transition-colors"
+              onClick={() => setShowScrapbook(true)}
+              title="Memories Scrapbook"
+            >
+              📒
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:text-pink-200 transition-colors"
               onClick={handleLogout}
               title="Log Out"
             >
@@ -356,7 +427,58 @@ const Working = () => {
                       {msg.sender}
                     </div>
                   )}
-                  <p>{msg.text}</p>
+                  
+                  {/* If message has an image */}
+                  {msg.type === "image" && msg.imageUrl && (
+                    <div className="mb-2">
+                      <img 
+                        src={msg.imageUrl} 
+                        alt="Shared image" 
+                        className="rounded-xl max-w-full max-h-64 w-auto object-contain"
+                        onClick={() => {
+                          // Save to scrapbook
+                          const scrapbookKey = `bearBoo_${roomCode}_scrapbook`;
+                          const storedScrapbook = localStorage.getItem(scrapbookKey);
+                          let scrapbook = storedScrapbook ? JSON.parse(storedScrapbook) : [];
+                          
+                          // Check if already in scrapbook
+                          if (!scrapbook.some((item: any) => item.imageUrl === msg.imageUrl)) {
+                            scrapbook.push({
+                              id: Date.now().toString(),
+                              imageUrl: msg.imageUrl,
+                              caption: msg.text !== "Sent an image" ? msg.text : "",
+                              sender: msg.sender,
+                              timestamp: msg.timestamp
+                            });
+                            
+                            localStorage.setItem(scrapbookKey, JSON.stringify(scrapbook));
+                            
+                            toast({
+                              title: "Added to Scrapbook",
+                              description: "Image saved to your memories ✨",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* For memory card */}
+                  {msg.type === "memory" && msg.imageUrl && (
+                    <div className="memory-card p-2 bg-pink-50 rounded-lg mb-2">
+                      <div className="text-xs font-medium text-pink-600 mb-1">Memory: {msg.memoryTitle || "Special moment"}</div>
+                      <img 
+                        src={msg.imageUrl} 
+                        alt="Memory" 
+                        className="rounded-lg w-full h-auto mb-1"
+                      />
+                      <p className="text-sm">{msg.text}</p>
+                    </div>
+                  )}
+                  
+                  {/* Message text (show only if not memory type) */}
+                  {(!msg.type || msg.type === "text" || msg.type === "image") && <p>{msg.text}</p>}
+                  
                   <div
                     className={`text-xs opacity-70 mt-1 ${
                       msg.sender === username ? "text-right" : ""
@@ -377,9 +499,42 @@ const Working = () => {
         </div>
 
         {/* Message Input */}
-        <div className="p-4 bg-white border-t border-pink-100">
+        <div className="p-4 bg-white border-t border-pink-100 relative">
+          {/* Image preview */}
+          {imagePreview && (
+            <div className="mb-3 relative">
+              <div className="relative rounded-xl overflow-hidden border border-pink-200">
+                <img 
+                  src={imagePreview} 
+                  alt="Image preview" 
+                  className="max-h-48 w-auto mx-auto"
+                />
+                <Button 
+                  className="absolute top-2 right-2 bg-pink-500 hover:bg-pink-600 text-white rounded-full h-8 w-8 p-0"
+                  onClick={cancelImageUpload}
+                >
+                  ✕
+                </Button>
+              </div>
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Add a caption to your image... ✨"
+                className="mt-2 py-2 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+              />
+            </div>
+          )}
+          
+          {/* Mood-based suggestions popup */}
+          {showMoodSuggestions && (
+            <MoodSuggestions 
+              onSelectSuggestion={(suggestion) => setMessage(suggestion)} 
+              onClose={() => setShowMoodSuggestions(false)}
+            />
+          )}
+          
           <div className="flex items-end gap-2">
-            {/* Emoji buttons */}
+            {/* Emoji button */}
             <div className="flex-none">
               <Button 
                 type="button" 
@@ -392,20 +547,57 @@ const Working = () => {
               </Button>
             </div>
             
-            <div className="flex-1">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder="Write something cute... ✍️💌"
-                className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+            {/* Mood suggestions button */}
+            <div className="flex-none">
+              <Button 
+                type="button" 
+                size="icon" 
+                variant="ghost"
+                className="text-pink-500 hover:text-pink-600 transition-colors"
+                onClick={() => setShowMoodSuggestions(!showMoodSuggestions)}
+                title="Message Suggestions"
+              >
+                💭
+              </Button>
+            </div>
+            
+            {/* Image upload button */}
+            <div className="flex-none">
+              <Button 
+                type="button" 
+                size="icon" 
+                variant="ghost"
+                className="text-pink-500 hover:text-pink-600 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                title="Share Photo"
+              >
+                📷
+              </Button>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
               />
             </div>
+            
+            {!imagePreview && (
+              <div className="flex-1">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Write something cute... ✍️💌"
+                  className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                />
+              </div>
+            )}
 
             <Button
               onClick={handleSendMessage}
@@ -416,8 +608,8 @@ const Working = () => {
           </div>
           
           {/* Quick emoji buttons */}
-          <div className="flex justify-center gap-2 mt-2">
-            {["💖", "😍", "🥰", "😘", "🐻", "💕"].map(emoji => (
+          <div className="flex justify-center gap-2 mt-2 flex-wrap">
+            {["💖", "😍", "🥰", "😘", "🐻", "💕", "💋", "🌹", "🦋", "✨"].map(emoji => (
               <button 
                 key={emoji}
                 onClick={() => addEmoji(emoji)}
