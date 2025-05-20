@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import CompatibilityGame from "@/components/CompatibilityGame";
 import Scrapbook from "@/components/Scrapbook";
-import MoodSuggestions from "@/components/MoodSuggestions";
+import SmartMessageSuggestions from "@/components/SmartMessageSuggestions";
 import DailyAffirmation from "@/components/DailyAffirmation";
 import AnniversaryTracker from "@/components/AnniversaryTracker";
 import DateNightPlanner from "@/components/DateNightPlanner";
@@ -275,10 +275,14 @@ const Working = () => {
           text: messageText || "Sent an image",
           encryptedText: encrypt(messageText || "Sent an image")
         };
-        setImagePreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        
+        // Clear image preview after sending
+        setTimeout(() => {
+          setImagePreview(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }, 100);
       } else {
         // Text message
         newMessage = {
@@ -303,7 +307,15 @@ const Working = () => {
       localStorage.setItem(`bearBoo_${roomCode}_messages`, JSON.stringify(updatedMessages));
       
       // Update state
-      setMessages([...messages, {...newMessage, text: newMessage.text}]);
+      setMessages([...messages, {...newMessage}]);
+      
+      // Show feedback for image message
+      if (newMessage.type === "image") {
+        toast({
+          title: "Image sent!",
+          description: "Your cute photo has been shared successfully.",
+        });
+      }
       
       // Clear input
       setMessage("");
