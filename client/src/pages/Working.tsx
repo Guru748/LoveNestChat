@@ -24,27 +24,30 @@ const Working = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Encrypt a message
+  // Encrypt a message - Unicode safe version
   const encrypt = (text: string): string => {
     try {
-      return btoa(`${password}:${text}`);
+      // First, encode the text as UTF-8
+      const utf8Encoded = encodeURIComponent(`${password}:${text}`);
+      return utf8Encoded;
     } catch (error) {
       console.error("Encryption error:", error);
       return "";
     }
   };
   
-  // Decrypt a message
+  // Decrypt a message - Unicode safe version
   const decrypt = (encoded: string): string => {
     try {
-      const decoded = atob(encoded);
+      // Decode from UTF-8
+      const decoded = decodeURIComponent(encoded);
       const parts = decoded.split(":");
       
       if (parts[0] !== password) {
         return "[encrypted message]";
       }
       
-      return parts[1];
+      return parts.slice(1).join(":"); // Handles case where message contains colons
     } catch (error) {
       console.error("Decryption error:", error);
       return "[encrypted message]";
