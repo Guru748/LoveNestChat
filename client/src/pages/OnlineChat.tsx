@@ -221,11 +221,11 @@ const OnlineChat = () => {
         <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-xl mx-auto transition-all duration-300">
           <div className="flex justify-center mb-6">
             <div className="rounded-2xl w-24 h-24 flex items-center justify-center shadow-md bg-pink-100">
-              <span className="text-5xl">🐻</span>
+              <span className="text-5xl animate-heart-beat">🐻</span>
             </div>
           </div>
           
-          <h1 className="text-3xl text-center mb-6 text-pink-500 font-bold">
+          <h1 className="text-3xl text-center mb-6 text-primary font-bold">
             BearBooLetters 💖
           </h1>
           
@@ -243,7 +243,7 @@ const OnlineChat = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full py-3 px-4 rounded-xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                className="w-full py-3 px-4 rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none"
               />
             </div>
             
@@ -259,7 +259,7 @@ const OnlineChat = () => {
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
                 placeholder="Create a unique room code"
-                className="w-full py-3 px-4 rounded-xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                className="w-full py-3 px-4 rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Both you and your partner must use the same room code.
@@ -278,7 +278,7 @@ const OnlineChat = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter a secret password"
-                className="w-full py-3 px-4 rounded-xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                className="w-full py-3 px-4 rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none"
               />
               <p className="text-xs text-gray-500 mt-1">
                 This password encrypts your messages. Share it only with your partner.
@@ -287,7 +287,7 @@ const OnlineChat = () => {
             
             <Button
               onClick={handleLogin}
-              className="w-full py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-all duration-200"
+              className="w-full py-3 bg-primary text-white rounded-xl hover:bg-primary-hover transition-all duration-200"
             >
               Start Chatting
             </Button>
@@ -301,10 +301,10 @@ const OnlineChat = () => {
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-pink-100 to-pink-50">
       <div className="h-[calc(100vh-2rem)] max-h-[700px] w-full max-w-md flex flex-col relative overflow-hidden bg-white rounded-3xl shadow-xl">
         {/* Chat Header */}
-        <div className="bg-pink-500 text-white py-4 px-6 flex justify-between items-center rounded-t-3xl">
+        <div className="bg-primary text-white py-4 px-6 flex justify-between items-center rounded-t-3xl">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center">
-              <span className="text-xl">🐻</span>
+              <span className="text-xl animate-heart-beat">🐻</span>
             </div>
             <div>
               <div className="font-semibold">BearBooLetters 💕</div>
@@ -319,7 +319,7 @@ const OnlineChat = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="text-white hover:text-pink-200 transition-colors"
+                  className="text-white hover:text-white/80 transition-colors"
                 >
                   🎨
                 </Button>
@@ -350,7 +350,7 @@ const OnlineChat = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white hover:text-pink-200 transition-colors"
+              className="text-white hover:text-white/80 transition-colors"
               onClick={handleLogout}
             >
               🚪
@@ -363,9 +363,9 @@ const OnlineChat = () => {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
               <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center mb-4">
-                <span className="text-3xl">💘</span>
+                <span className="text-3xl animate-heart-beat">💘</span>
               </div>
-              <h3 className="font-semibold text-lg text-pink-500">No messages yet</h3>
+              <h3 className="font-semibold text-lg text-primary">No messages yet</h3>
               <p className="mt-2">
                 Send your first message to start your private conversation!
               </p>
@@ -379,12 +379,12 @@ const OnlineChat = () => {
                 <div
                   className={`max-w-[80%] rounded-2xl p-3 ${
                     msg.sender === username
-                      ? "bg-pink-500 text-white"
-                      : "bg-white text-gray-800 border border-pink-100"
+                      ? "bg-primary text-white"
+                      : "bg-white text-gray-800 border border-primary/30"
                   }`}
                 >
                   {msg.sender !== username && (
-                    <div className="font-medium text-xs mb-1 text-pink-400">
+                    <div className="font-medium text-xs mb-1 text-primary">
                       {msg.sender}
                     </div>
                   )}
@@ -404,12 +404,23 @@ const OnlineChat = () => {
             ))
           )}
           
+          {/* Typing indicator */}
+          <div className="flex justify-start" style={{opacity: Math.random() > 0.7 ? 1 : 0}}>
+            <div className="bg-white text-gray-800 border border-primary/30 rounded-2xl p-3 px-4">
+              <div className="flex space-x-1">
+                <div className="typing-dot w-2 h-2 rounded-full bg-primary"></div>
+                <div className="typing-dot w-2 h-2 rounded-full bg-primary"></div>
+                <div className="typing-dot w-2 h-2 rounded-full bg-primary"></div>
+              </div>
+            </div>
+          </div>
+          
           {/* Auto-scroll reference */}
           <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
-        <div className="p-4 bg-white border-t border-pink-100">
+        <div className="p-4 bg-white border-t border-primary/20">
           <div className="flex items-end gap-2">
             {/* Emoji picker */}
             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
@@ -418,7 +429,7 @@ const OnlineChat = () => {
                   type="button" 
                   size="icon" 
                   variant="ghost"
-                  className="text-pink-500 hover:text-pink-600 transition-colors"
+                  className="text-primary hover:text-primary/80 transition-colors"
                 >
                   <FaSmile />
                 </Button>
@@ -430,7 +441,7 @@ const OnlineChat = () => {
                     "🌸", "🌈", "✨", "💫", "⭐", "🔥", "💯", "💦"].map((emoji) => (
                     <button
                       key={emoji}
-                      className="w-8 h-8 flex items-center justify-center text-xl hover:bg-pink-100 rounded"
+                      className="w-8 h-8 flex items-center justify-center text-xl hover:bg-primary/10 rounded"
                       onClick={() => addEmoji(emoji)}
                     >
                       {emoji}
@@ -451,13 +462,13 @@ const OnlineChat = () => {
                   }
                 }}
                 placeholder="Write something cute... ✍️💌"
-                className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                className="w-full py-3 px-4 rounded-2xl border-2 border-primary/30 focus:border-primary focus:outline-none"
               />
             </div>
 
             <Button
               onClick={handleSendMessage}
-              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200"
+              className="bg-primary text-white p-3 rounded-xl hover:bg-primary-hover transition-all duration-200"
             >
               📨
             </Button>
