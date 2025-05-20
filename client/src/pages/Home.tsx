@@ -2,16 +2,16 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import ChatInterface from "@/components/ChatInterface";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 
 const Home = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
 
   useEffect(() => {
     // Check if user is logged in via Firebase Auth
-    if (!loading && !isAuthenticated) {
+    if (!loading && !currentUser) {
       toast({
         title: "Login required",
         description: "Please login to access your private chat",
@@ -22,7 +22,7 @@ const Home = () => {
 
     // Check if encryption password is set
     const encryptionPassword = sessionStorage.getItem("bearBooPassword");
-    if (!encryptionPassword && isAuthenticated) {
+    if (!encryptionPassword && currentUser) {
       toast({
         title: "Chat password required",
         description: "Please provide your secret chat password for message encryption",
@@ -31,7 +31,7 @@ const Home = () => {
       // Redirect to login to get the encryption password
       setLocation("/");
     }
-  }, [setLocation, toast, isAuthenticated, loading]);
+  }, [setLocation, toast, currentUser, loading]);
 
   // Show loading state while auth is being checked
   if (loading) {
@@ -52,7 +52,7 @@ const Home = () => {
   }
 
   // Only render chat interface if authenticated and encryption password exists
-  return isAuthenticated ? <ChatInterface /> : null;
+  return currentUser ? <ChatInterface /> : null;
 };
 
 export default Home;

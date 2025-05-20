@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import {
   Card,
   CardContent,
@@ -31,7 +31,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auth hook
-  const { login, register, loading } = useAuth();
+  const { login, register, loading, currentUser } = useAuth();
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();

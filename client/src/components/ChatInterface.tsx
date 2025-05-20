@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTheme } from "@/hooks/useTheme";
 import { useChatRoom } from "@/hooks/useChatRoom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import ThemeSelector from "./ThemeSelector";
 import EmojiPicker from "./EmojiPicker";
 import MessageInput from "./MessageInput";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const ChatInterface = () => {
-  const { user, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { 
     messages, 
     isTyping, 
@@ -55,8 +55,8 @@ const ChatInterface = () => {
   };
 
   // Get display information
-  const displayName = user?.displayName || 'Your BearBoo';
-  const photoURL = user?.photoURL || '👧';
+  const displayName = currentUser?.displayName || 'Your BearBoo';
+  const photoURL = currentUser?.photoURL || '👧';
   
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-[hsl(var(--theme-pink-light))] to-pink-50">
