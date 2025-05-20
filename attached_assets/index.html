@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BearBooLetters 🐻💌</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>BearBooLetters 💖</h1>
+    <input type="password" id="password" placeholder="Enter your secret password 🔐" />
+    <button onclick="unlock()">Unlock Chat</button>
+    <div id="chat" class="hidden">
+      <textarea id="message" placeholder="Write something cute... ✍️💌"></textarea>
+      <button onclick="sendMessage()">Send 🐼</button>
+      <ul id="messages"></ul>
+    </div>
+  </div>
+</body>
+</html>
