@@ -18,24 +18,21 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 
 const Login = () => {
-  // Login state
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [chatPassword, setChatPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [partnerEmail, setPartnerEmail] = useState("");
+  const [chatPassword, setChatPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Auth hook
-  const { login, register, loading, currentUser } = useAuth();
+  
+  const { currentUser, login, register } = useAuth();
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-
+  
   // Check if user is already logged in
   useEffect(() => {
     if (currentUser) {
@@ -81,33 +78,25 @@ const Login = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim() || !password.trim() || !confirmPassword.trim() || !chatPassword.trim()) {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim() || 
+        !displayName.trim() || !chatPassword.trim()) {
       toast({
         title: "All fields required",
-        description: "Please fill in all required fields 💕",
+        description: "Please fill in all fields 💕",
         variant: "destructive",
       });
       return;
     }
-
+    
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
-        description: "Please make sure your passwords match 💕",
+        description: "Please make sure your passwords match 💖",
         variant: "destructive",
       });
       return;
     }
-
-    if (chatPassword.length < 6) {
-      toast({
-        title: "Chat password too short",
-        description: "Your secret chat password should be at least 6 characters 🔒",
-        variant: "destructive", 
-      });
-      return;
-    }
-
+    
     setIsSubmitting(true);
     
     try {
@@ -118,6 +107,11 @@ const Login = () => {
         sessionStorage.setItem("bearBooPassword", chatPassword);
         
         // Redirect to chat
+        toast({
+          title: "Registration successful!",
+          description: "Welcome to BearBooLetters 💌",
+        });
+        
         setLocation("/chat");
       }
     } finally {
@@ -126,201 +120,162 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-[hsl(var(--theme-pink-light))] to-pink-50">
-      <Card className="w-full max-w-md mx-auto bg-white/95 backdrop-blur rounded-3xl shadow-xl border-pink-100">
-        {/* Cute bear illustration */}
-        <div className="flex justify-center mt-8">
-          <div className="rounded-2xl w-24 h-24 flex items-center justify-center shadow-md bg-[hsl(var(--theme-pink-light))]">
-            <span className="text-5xl animate-heart-beat">🐻</span>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-pink-100 to-pink-50">
+      <Card className="w-full max-w-md shadow-xl mx-auto">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full w-16 h-16 flex items-center justify-center shadow-md bg-pink-100">
+              <span className="text-3xl">🐻</span>
+            </div>
           </div>
-        </div>
-
-        <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-3xl font-bold text-[hsl(var(--primary))]">
-            BearBooLetters 💖
-          </CardTitle>
-          <CardDescription className="text-[hsl(var(--theme-pink-dark))]">
-            Send private love notes with end-to-end encryption
+          <CardTitle className="text-2xl font-bold text-pink-500">BearBooLetters</CardTitle>
+          <CardDescription>
+            Your secure, cute chat portal for couples 💌
           </CardDescription>
         </CardHeader>
-
-        <Tabs defaultValue="login" className="w-full">
-          <div className="px-6">
-            <TabsList className="grid w-full grid-cols-2 bg-[hsl(var(--theme-pink-light))]/30">
-              <TabsTrigger value="login" className="data-[state=active]:bg-white">
-                Login
-              </TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-white">
-                Register
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Login Tab */}
+        
+        <Tabs defaultValue="login" onValueChange={(value) => setIsLogin(value === "login")}>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
+          
           <TabsContent value="login">
             <form onSubmit={handleLogin}>
-              <CardContent className="space-y-4 pt-4">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <label className="text-sm font-medium">Email</label>
                   <Input
-                    id="email"
                     type="email"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]" 
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="password">Account Password</Label>
+                  <label className="text-sm font-medium">Password</label>
                   <Input
-                    id="password"
                     type="password"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your account password"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="chatPassword">
-                    Secret Chat Password
-                    <span className="text-xs text-[hsl(var(--muted-foreground))] ml-1">
+                  <label className="text-sm font-medium">
+                    Chat Secret Password
+                    <span className="text-xs text-gray-500 ml-1">
                       (for encryption)
                     </span>
-                  </Label>
+                  </label>
                   <Input
-                    id="chatPassword"
                     type="password"
+                    placeholder="Enter secret password for chat"
                     value={chatPassword}
                     onChange={(e) => setChatPassword(e.target.value)}
-                    placeholder="Secret password for chats 🔐"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
                     required
                   />
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  <p className="text-xs text-gray-500">
                     This password encrypts your messages. Share it only with your partner.
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || loading}
-                  className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+              
+              <CardFooter>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Logging In..." : "Login to Chat"}
+                  {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
-
-          {/* Register Tab */}
+          
           <TabsContent value="register">
             <form onSubmit={handleRegister}>
-              <CardContent className="space-y-4 pt-4">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="registerEmail">Email</Label>
+                  <label className="text-sm font-medium">Display Name</label>
                   <Input
-                    id="registerEmail"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Your Name (Optional)</Label>
-                  <Input
-                    id="displayName"
                     type="text"
+                    placeholder="Enter your name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="What should we call you?"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
+                    required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="partnerEmail">Partner's Email (Optional)</Label>
+                  <label className="text-sm font-medium">Email</label>
                   <Input
-                    id="partnerEmail"
                     type="email"
-                    value={partnerEmail}
-                    onChange={(e) => setPartnerEmail(e.target.value)}
-                    placeholder="your.partner@example.com"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                    We'll connect your accounts automatically
-                  </p>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="registerPassword">Account Password</Label>
+                  <label className="text-sm font-medium">Password</label>
                   <Input
-                    id="registerPassword"
                     type="password"
+                    placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <label className="text-sm font-medium">Confirm Password</label>
                   <Input
-                    id="confirmPassword"
                     type="password"
+                    placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="registerChatPassword">
-                    Secret Chat Password
-                    <span className="text-xs text-[hsl(var(--muted-foreground))] ml-1">
+                  <label className="text-sm font-medium">
+                    Chat Secret Password
+                    <span className="text-xs text-gray-500 ml-1">
                       (for encryption)
                     </span>
-                  </Label>
+                  </label>
                   <Input
-                    id="registerChatPassword"
                     type="password"
+                    placeholder="Create a secret password for chat"
                     value={chatPassword}
                     onChange={(e) => setChatPassword(e.target.value)}
-                    placeholder="Secret password for chats 🔐"
-                    className="bg-white/80 border-[hsl(var(--theme-pink-light))]"
                     required
                   />
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  <p className="text-xs text-gray-500">
                     This password encrypts your messages. Share it only with your partner.
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="flex flex-col">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || loading}
-                  className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]"
+              
+              <CardFooter>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                  {isSubmitting ? "Registering..." : "Register"}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
         </Tabs>
-
-        <div className="p-6 pt-0 text-center">
-          <p className="text-[hsl(var(--muted-foreground))] text-xs">
-            Your messages are secured with end-to-end encryption 💘
-          </p>
-        </div>
       </Card>
     </div>
   );
