@@ -133,8 +133,7 @@ export function useAuth() {
     loading,
     login,
     register,
-    logout,
-    sendPasswordReset,
+    logout: handleLogout,
     isAuthenticated: !!user
   };
 }
