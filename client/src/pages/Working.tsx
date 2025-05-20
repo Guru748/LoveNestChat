@@ -8,6 +8,7 @@ import SmartMessageSuggestions from "@/components/SmartMessageSuggestions";
 import DailyAffirmation from "@/components/DailyAffirmation";
 import AnniversaryTracker from "@/components/AnniversaryTracker";
 import DateNightPlanner from "@/components/DateNightPlanner";
+import CustomAvatar, { type AvatarConfig } from "@/components/CustomAvatar";
 
 // Define message type
 interface Message {
@@ -35,6 +36,17 @@ const Working = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showMoodSuggestions, setShowMoodSuggestions] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [myAvatar, setMyAvatar] = useState<AvatarConfig>({
+    base: '🐻',
+    accessory: '',
+    bgColor: 'bg-pink-400'
+  });
+  const [partnerAvatar, setPartnerAvatar] = useState<AvatarConfig>({
+    base: '🐱',
+    accessory: '',
+    bgColor: 'bg-blue-400'
+  });
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -424,11 +436,22 @@ const Working = () => {
         {/* Chat Header */}
         <div className="bg-pink-500 text-white py-3 px-4 md:py-4 md:px-6 flex justify-between items-center rounded-t-3xl shadow-md">
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/30 flex items-center justify-center animate-float">
-              <span className="text-base md:text-xl">🐻</span>
+            <div className="cursor-pointer" onClick={() => setShowAvatarCustomizer(true)} title="Customize your avatar">
+              <CustomAvatar 
+                size="md" 
+                config={myAvatar} 
+                editable={true} 
+                onChange={(newConfig) => {
+                  setMyAvatar(newConfig);
+                  // Save to local storage
+                  localStorage.setItem(`bearBoo_${roomCode}_myAvatar`, JSON.stringify(newConfig));
+                }}
+              />
             </div>
             <div>
-              <div className="font-semibold text-sm md:text-base">BearBooLetters 💕</div>
+              <div className="font-semibold text-sm md:text-base">
+                <span className="animate-pulse-slow">💕</span> {username}'s Chat
+              </div>
               <div className="text-xs">Room: {roomCode}</div>
             </div>
           </div>
@@ -507,10 +530,20 @@ const Working = () => {
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.sender === username ? "justify-end" : "justify-start"}`}
+                className={`flex items-end gap-2 ${msg.sender === username ? "justify-end" : "justify-start"}`}
               >
+                {msg.sender !== username && (
+                  <div className="flex-shrink-0 mb-1">
+                    <CustomAvatar 
+                      size="sm" 
+                      config={partnerAvatar}
+                      username={msg.sender}
+                    />
+                  </div>
+                )}
+                
                 <div
-                  className={`max-w-[85%] sm:max-w-[80%] rounded-xl sm:rounded-2xl p-2 sm:p-3 ${
+                  className={`max-w-[75%] sm:max-w-[70%] rounded-xl sm:rounded-2xl p-2 sm:p-3 ${
                     msg.sender === username
                       ? "message-bubble-me"
                       : "message-bubble-other"
@@ -586,6 +619,16 @@ const Working = () => {
                     })}
                   </div>
                 </div>
+                
+                {msg.sender === username && (
+                  <div className="flex-shrink-0 mb-1">
+                    <CustomAvatar 
+                      size="sm" 
+                      config={myAvatar}
+                      username={username}
+                    />
+                  </div>
+                )}
               </div>
             ))
           )}
