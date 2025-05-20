@@ -5,6 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import CompatibilityGame from "@/components/CompatibilityGame";
 import Scrapbook from "@/components/Scrapbook";
 import MoodSuggestions from "@/components/MoodSuggestions";
+import DailyAffirmation from "@/components/DailyAffirmation";
+import AnniversaryTracker from "@/components/AnniversaryTracker";
+import DateNightPlanner from "@/components/DateNightPlanner";
 
 // Define message type
 interface Message {
@@ -26,6 +29,9 @@ const Working = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCompatibilityGame, setShowCompatibilityGame] = useState(false);
   const [showScrapbook, setShowScrapbook] = useState(false);
+  const [showDailyAffirmation, setShowDailyAffirmation] = useState(false);
+  const [showAnniversaryTracker, setShowAnniversaryTracker] = useState(false);
+  const [showDatePlanner, setShowDatePlanner] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showMoodSuggestions, setShowMoodSuggestions] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -226,10 +232,12 @@ const Working = () => {
   };
   
   // Send message (text or image)
-  const handleSendMessage = () => {
-    if ((!message.trim() && !imagePreview) || !isLoggedIn) return;
+  const handleSendMessage = (customText?: string) => {
+    if ((!message.trim() && !imagePreview && !customText) || !isLoggedIn) return;
     
     try {
+      const messageText = customText || message;
+      
       // Create message object
       let newMessage: any = {
         id: Date.now().toString(),
@@ -243,8 +251,8 @@ const Working = () => {
           ...newMessage,
           type: "image",
           imageUrl: imagePreview,
-          text: message || "Sent an image",
-          encryptedText: encrypt(message || "Sent an image")
+          text: messageText || "Sent an image",
+          encryptedText: encrypt(messageText || "Sent an image")
         };
         setImagePreview(null);
         if (fileInputRef.current) {
@@ -255,8 +263,8 @@ const Working = () => {
         newMessage = {
           ...newMessage,
           type: "text",
-          text: message,
-          encryptedText: encrypt(message)
+          text: messageText,
+          encryptedText: encrypt(messageText)
         };
       }
       
@@ -387,7 +395,7 @@ const Working = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -405,6 +413,33 @@ const Working = () => {
               title="Memories Scrapbook"
             >
               📒
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:text-pink-200 transition-colors"
+              onClick={() => setShowDailyAffirmation(true)}
+              title="Daily Love Affirmation"
+            >
+              ✨
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:text-pink-200 transition-colors"
+              onClick={() => setShowAnniversaryTracker(true)}
+              title="Special Dates Tracker"
+            >
+              💕
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:text-pink-200 transition-colors"
+              onClick={() => setShowDatePlanner(true)}
+              title="Virtual Date Planner"
+            >
+              🌙
             </Button>
             <Button 
               variant="ghost" 
@@ -694,6 +729,47 @@ const Working = () => {
             
             // Close scrapbook
             setShowScrapbook(false);
+          }}
+        />
+      )}
+      
+      {/* Render the daily affirmation when showDailyAffirmation is true */}
+      {showDailyAffirmation && (
+        <DailyAffirmation
+          roomCode={roomCode}
+          onClose={() => setShowDailyAffirmation(false)}
+          onSendAffirmation={(text) => {
+            // Create and send a message with the affirmation
+            handleSendMessage(text);
+            setShowDailyAffirmation(false);
+          }}
+        />
+      )}
+      
+      {/* Render the anniversary tracker when showAnniversaryTracker is true */}
+      {showAnniversaryTracker && (
+        <AnniversaryTracker
+          roomCode={roomCode}
+          onClose={() => setShowAnniversaryTracker(false)}
+          onShareAnniversary={(text) => {
+            // Create and send a message with the anniversary info
+            handleSendMessage(text);
+            setShowAnniversaryTracker(false);
+          }}
+        />
+      )}
+      
+      {/* Render the date night planner when showDatePlanner is true */}
+      {showDatePlanner && (
+        <DateNightPlanner
+          roomCode={roomCode}
+          username={username}
+          onClose={() => setShowDatePlanner(false)}
+          onSharePlan={(plan) => {
+            // Create and send a message with the date plan
+            const text = `🌙 Virtual Date: ${plan.title} 🌙\n📅 ${new Date(plan.date).toLocaleString()}\n\n${plan.description}`;
+            handleSendMessage(text);
+            setShowDatePlanner(false);
           }}
         />
       )}
