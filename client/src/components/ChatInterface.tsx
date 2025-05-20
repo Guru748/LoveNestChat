@@ -1,109 +1,140 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useChat } from "@/hooks/useChat";
 import { useTheme } from "@/hooks/useTheme";
+import { useChatRoom } from "@/hooks/useChatRoom";
+import { useAuth } from "@/hooks/useAuth";
 import ThemeSelector from "./ThemeSelector";
 import EmojiPicker from "./EmojiPicker";
 import MessageInput from "./MessageInput";
 import MessageBubble from "./MessageBubble";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ChatInterface = () => {
-  const { messages, sendMessage, isTyping, setTyping, isOnline } = useChat();
+  const { user, logout } = useAuth();
+  const { 
+    messages, 
+    isTyping, 
+    isPartnerOnline, 
+    messageInput, 
+    setMessageInput, 
+    sendMessage,
+    messagesEndRef 
+  } = useChatRoom();
   const { currentTheme, changeTheme, themes } = useTheme();
+  
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [messageText, setMessageText] = useState("");
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   const handleSendMessage = () => {
-    if (messageText.trim()) {
-      const success = sendMessage(messageText.trim());
+    if (messageInput.trim()) {
+      const success = sendMessage(messageInput.trim());
       if (success) {
-        setMessageText("");
+        setMessageInput("");
         setShowEmojiPicker(false);
       }
     }
   };
 
   const handleAddEmoji = (emoji: string) => {
-    setMessageText(prev => prev + emoji);
+    setMessageInput(messageInput + emoji);
   };
 
-  const handleMessageInputChange = (value: string) => {
-    setMessageText(value);
-    
-    // Set typing indicator when user is typing
-    if (value.trim().length > 0) {
-      setTyping(true);
-    } else {
-      setTyping(false);
-    }
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     sessionStorage.removeItem("bearBooPassword");
     setLocation("/");
   };
 
+  // Get display information
+  const displayName = user?.displayName || 'Your BearBoo';
+  const photoURL = user?.photoURL || '👧';
+  
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
-      <div className="h-screen max-h-[700px] w-full max-w-md flex flex-col relative overflow-hidden bg-[hsl(var(--theme-pink-light))] rounded-3xl shadow-xl">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-r from-[hsl(var(--theme-pink-light))] to-pink-50">
+      <div className="h-[calc(100vh-2rem)] max-h-[700px] w-full max-w-md flex flex-col relative overflow-hidden bg-white/90 backdrop-blur rounded-3xl shadow-xl border border-pink-100">
         {/* Chat Header */}
         <div className="bg-[hsl(var(--primary))] text-white py-4 px-6 flex justify-between items-center rounded-t-3xl">
           <div className="flex items-center gap-3">
             <div className="relative">
-              {/* Profile photo with decorative heart */}
+              {/* Profile photo with status indicator */}
               <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center">
-                <span className="text-xl">👧</span>
+                {typeof photoURL === 'string' && photoURL.startsWith('http') ? (
+                  <img 
+                    src={photoURL} 
+                    alt={displayName} 
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xl">{photoURL}</span>
+                )}
               </div>
               <div 
-                className={`absolute bottom-0 right-0 w-3 h-3 ${isOnline ? 'bg-[hsl(var(--online))]' : 'bg-[hsl(var(--offline))]'} rounded-full border border-white`}
+                className={`absolute bottom-0 right-0 w-3 h-3 ${isPartnerOnline ? 'bg-[hsl(var(--online))]' : 'bg-[hsl(var(--offline))]'} rounded-full border border-white`}
               ></div>
             </div>
             <div>
-              <div className="font-semibold">Your BearBoo 💕</div>
+              <div className="font-semibold">{displayName} 💕</div>
               {isTyping ? (
                 <div className="text-xs typing-indicator">typing</div>
               ) : (
-                <div className="text-xs">{isOnline ? 'online now' : 'last seen just now'}</div>
+                <div className="text-xs">{isPartnerOnline ? 'online now' : 'last seen just now'}</div>
               )}
             </div>
           </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => {
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:text-[hsl(var(--theme-pink-light))]/80 transition-colors">
+                <i className="fas fa-ellipsis-v"></i>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => {
                 setShowThemeSelector(!showThemeSelector);
                 setShowEmojiPicker(false);
-              }}
-              className="text-white hover:text-[hsl(var(--theme-pink-light))]/80 transition-colors"
-            >
-              <i className="fas fa-palette"></i>
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="text-white hover:text-[hsl(var(--theme-pink-light))]/80 transition-colors"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
-          </div>
+              }}>
+                <i className="fas fa-palette mr-2"></i>
+                Change Theme
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Chat Messages Container */}
-        <div 
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4 bg-[hsl(var(--theme-pink-light))]/95"
-        >
-          {messages.map((message, index) => (
-            <MessageBubble key={message.id || index} message={message} />
-          ))}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[hsl(var(--theme-pink-light))]/10 to-white/70">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[hsl(var(--muted-foreground))]">
+              <div className="w-16 h-16 rounded-full bg-[hsl(var(--theme-pink-light))]/30 flex items-center justify-center mb-4">
+                <span className="text-3xl animate-heart-beat">💘</span>
+              </div>
+              <h3 className="font-semibold text-lg text-[hsl(var(--primary))]">No messages yet</h3>
+              <p className="mt-2">
+                Send your first message to start your private conversation!
+              </p>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <MessageBubble key={message.id || index} message={message} />
+            ))
+          )}
+          
+          {/* This empty div is used for auto-scrolling to the latest message */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Theme Selector */}
@@ -125,8 +156,8 @@ const ChatInterface = () => {
 
         {/* Message Input */}
         <MessageInput 
-          value={messageText}
-          onChange={handleMessageInputChange}
+          value={messageInput}
+          onChange={setMessageInput}
           onSend={handleSendMessage}
           onToggleEmojiPicker={() => {
             setShowEmojiPicker(!showEmojiPicker);
