@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 
 // Define message type
 interface Message {
@@ -9,6 +14,9 @@ interface Message {
   text: string;
   sender: string;
   timestamp: number;
+  type?: "text" | "image";
+  imageUrl?: string;
+  encryptedText?: string;
 }
 
 const SimpleRoom = () => {
@@ -18,6 +26,10 @@ const SimpleRoom = () => {
   const [roomCode, setRoomCode] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -150,19 +162,101 @@ const SimpleRoom = () => {
     return () => clearInterval(interval);
   }, [isLoggedIn, roomCode, password, messages.length]);
   
+  // Handle image upload
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create a preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setImagePreview(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Cancel image upload
+  const cancelImageUpload = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  // Add emoji to message
+  const addEmoji = (emoji: string) => {
+    setMessage((prev) => prev + emoji);
+  };
+  
+  // Show typing indicator (simulated for demo)
+  const handleTyping = () => {
+    // Randomly show typing indicator occasionally
+    if (Math.random() > 0.9) {
+      setIsTyping(true);
+      setTimeout(() => setIsTyping(false), 3000);
+    }
+  };
+  
   // Send a message
   const handleSendMessage = () => {
-    if (!message.trim() || !isLoggedIn) return;
+    if ((!message.trim() && !imagePreview) || !isLoggedIn) return;
     
     try {
       // Create message object
-      const newMessage = {
-        id: Date.now().toString(),
-        text: message,
-        sender: username,
-        timestamp: Date.now(),
-        encryptedText: encrypt(message)
-      };
+      let newMessage: Message;
+      
+      if (imagePreview) {
+        // Image message
+        newMessage = {
+          id: Date.now().toString(),
+          text: message || "Sent an image 📷",
+          sender: username,
+          timestamp: Date.now(),
+          type: "image",
+          imageUrl: imagePreview,
+          encryptedText: encrypt(JSON.stringify({
+            text: message || "Sent an image 📷",
+            imageUrl: imagePreview
+          }))
+        };
+        // Reset image preview
+        setImagePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        // Text message
+        newMessage = {
+          id: Date.now().toString(),
+          text: message,
+          sender: username,
+          timestamp: Date.now(),
+          type: "text",
+          encryptedText: encrypt(message)
+        };
+      }
       
       // Add to messages
       const updatedMessages = [...messages, newMessage];
@@ -175,6 +269,9 @@ const SimpleRoom = () => {
       
       // Clear input
       setMessage("");
+      
+      // Show typing indicator occasionally
+      handleTyping();
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -299,9 +396,9 @@ const SimpleRoom = () => {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
               <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center mb-4">
-                <span className="text-3xl">💘</span>
+                <span className="text-3xl animate-bounce-slow">💘</span>
               </div>
-              <h3 className="font-semibold text-lg text-pink-500">No messages yet</h3>
+              <h3 className="font-semibold text-lg text-pink-500 animate-pulse-slow">No messages yet</h3>
               <p className="mt-2">
                 Send your first message to start your private conversation!
               </p>
@@ -324,7 +421,21 @@ const SimpleRoom = () => {
                       {msg.sender}
                     </div>
                   )}
+                  
+                  {/* If message has an image */}
+                  {msg.type === "image" && msg.imageUrl && (
+                    <div className="mb-2">
+                      <img 
+                        src={msg.imageUrl} 
+                        alt="Shared image" 
+                        className="rounded-xl max-h-64 w-auto"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Message text */}
                   <p>{msg.text}</p>
+                  
                   <div
                     className={`text-xs opacity-70 mt-1 ${
                       msg.sender === username ? "text-right" : ""
@@ -340,31 +451,122 @@ const SimpleRoom = () => {
             ))
           )}
           
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white text-gray-800 border border-pink-100 rounded-2xl p-3 px-4">
+                <div className="flex space-x-1">
+                  <div className="typing-dot w-2 h-2 rounded-full bg-pink-400"></div>
+                  <div className="typing-dot w-2 h-2 rounded-full bg-pink-400"></div>
+                  <div className="typing-dot w-2 h-2 rounded-full bg-pink-400"></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Auto-scroll reference */}
           <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
         <div className="p-4 bg-white border-t border-pink-100">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
+          {/* Image preview area */}
+          {imagePreview && (
+            <div className="mb-3 relative">
+              <div className="relative rounded-xl overflow-hidden border border-pink-200">
+                <img 
+                  src={imagePreview} 
+                  alt="Image preview" 
+                  className="max-h-48 w-auto mx-auto"
+                />
+                <Button 
+                  className="absolute top-2 right-2 bg-pink-500 hover:bg-pink-600 text-white rounded-full h-8 w-8 p-0"
+                  onClick={cancelImageUpload}
+                >
+                  ✕
+                </Button>
+              </div>
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder="Write something cute... ✍️💌"
-                className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                placeholder="Add a caption to your image... ✨"
+                className="mt-2 py-2 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
               />
             </div>
+          )}
+          
+          <div className="flex items-end gap-2">
+            {/* Emoji picker */}
+            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+              <PopoverTrigger asChild>
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="ghost"
+                  className="text-pink-500 hover:text-pink-600 transition-colors"
+                >
+                  😊
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64" side="top">
+                <div className="grid grid-cols-8 gap-2">
+                  {["❤️", "💖", "💕", "💓", "💗", "💝", "💘", "😍", 
+                    "🥰", "😘", "😚", "😊", "🐻", "🧸", "🌹", "🌷",
+                    "🌸", "🌈", "✨", "💫", "⭐", "🔥", "💯", "💦",
+                    "👋", "👍", "👏", "👀", "💪", "🙌", "🤗", "😂"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      className="w-8 h-8 flex items-center justify-center text-xl hover:bg-pink-100 rounded"
+                      onClick={() => {
+                        addEmoji(emoji);
+                        setShowEmojiPicker(false);
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {/* Image upload button */}
+            <Button 
+              type="button" 
+              size="icon" 
+              variant="ghost"
+              className="text-pink-500 hover:text-pink-600 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              📷
+            </Button>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+            />
+            
+            {!imagePreview && (
+              <div className="flex-1">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Write something cute... ✍️💌"
+                  className="w-full py-3 px-4 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none"
+                />
+              </div>
+            )}
 
             <Button
               onClick={handleSendMessage}
-              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200"
+              className="bg-pink-500 text-white p-3 rounded-xl hover:bg-pink-600 transition-all duration-200 animate-pulse-slow"
             >
               📨
             </Button>
