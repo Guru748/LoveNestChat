@@ -441,12 +441,8 @@ const Working = () => {
               <CustomAvatar 
                 size="md" 
                 config={myAvatar} 
-                editable={true} 
-                onChange={(newConfig) => {
-                  setMyAvatar(newConfig);
-                  // Save to local storage
-                  localStorage.setItem(`bearBoo_${roomCode}_myAvatar`, JSON.stringify(newConfig));
-                }}
+                editable={true}
+                username={username}
               />
             </div>
             <div>
@@ -871,6 +867,24 @@ const Working = () => {
             handleSendMessage(text);
             setShowDatePlanner(false);
           }}
+        />
+      )}
+      
+      {/* Avatar Customizer Dialog */}
+      {isLoggedIn && (
+        <AvatarCustomizer
+          isOpen={showAvatarCustomizer}
+          onClose={() => setShowAvatarCustomizer(false)}
+          initialConfig={myAvatar}
+          onSave={(newConfig) => {
+            setMyAvatar(newConfig);
+            localStorage.setItem(`bearBoo_${roomCode}_myAvatar`, JSON.stringify(newConfig));
+            toast({
+              title: "Avatar Updated",
+              description: "Your avatar has been customized successfully!",
+            });
+          }}
+          title="Customize Your Avatar"
         />
       )}
     </div>
