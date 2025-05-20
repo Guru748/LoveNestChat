@@ -4,12 +4,12 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import FirebaseChat from "@/pages/FirebaseChat";
+import OnlineChat from "@/pages/OnlineChat";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={FirebaseChat} />
+      <Route path="/" component={OnlineChat} />
       <Route component={NotFound} />
     </Switch>
   );
